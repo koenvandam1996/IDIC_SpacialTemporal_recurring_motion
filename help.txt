@@ -1,0 +1,117 @@
+% gdic = IDIC_Calculation(x1,y1,u,phi,Manifold,options);
+%
+% inputs:
+%   Manifold       : Both reference and deformed images, matrix with Z coordinates (or gray values)
+%   x1       : column with x coordinates
+%   y1       : column with y coordinates
+%   u       : a column with the initial guesses for the DOF
+%   phi     : a matrix specifying which order (or degree) of the
+%             basis-function to use and in which direction they operate.
+%             The specifics of phi depend on the type functions used (see
+%             options.basis).
+%
+%             For a polynomial basis, phi is of size (N,3); for each DOF
+%             one row of [a, b, d], where d is the direction (1=x,2=y,3=z)
+%             in which the DOF works, and a and b are the polynomial order
+%             in the x and y directions respectively. For example, phi(1) =
+%             [1, 2, 3] creates the shape; phi = x^2 * y^3 * e_x.
+%
+%
+%   options : a structure with the following (optional) fields where the
+%   default is always listed first:
+%    - ROI = 'default',[xmin xmax ymin ymax],'none'
+%      Specifying 'default' results in a 10% boundary on each edge, 'none'
+%      will result in no boundary.
+%    - mask= [index(1) index(2)], 'none'
+%      Specifying nothing will result in no mask over the image, specifying 
+%      index numbers result in masking the specific pixel. In the example case 
+%      a mask.png image is supplying giving the mask with as the value white 
+%      (leaving white pixels inside the ROI will also remove these from the 
+%      correlation).
+%
+%    - coarsesteps = 0,N,-N,[list*]
+%      The number of steps can be specified directly as N, specifying 0
+%      results in auto detection of the number of steps, specifying -N uses
+%      the auto detection and subtracts N. For [list*] see below.
+%
+%    - background = 0,n
+%      Specifying if the reflection is important in the image and can be
+%      removed from all the images. Using a higher factor of n results in 
+%      a Gaussian filter with value n.
+%
+%    - convcrit = 1e-5,[list*]
+%      Convergence criteria on the norm(du) and on the change in residual.
+%      For [list*] see below.
+%
+%    - factor = [1,....,n]
+%      Specifying the velocity multiplicator values for the calculation. In 
+%      the correlation all factors are based on the first two images. So 
+%      factor(1) is fixed at 1. If a speed trend is known this can be given
+%      beforehand
+%
+%    - maxiter = 20,[list*]
+%      Maximum number of iterations per coarse grain step.  For [list*] see
+%      below.
+%
+%    - list = false,true
+%      Set to true if each coarsestep is specified explicitly, e.g.
+%      coarsesteps = [4, 3, 2]. This allows some steps to be excluded.
+%      Additionally, the list option also allows setting the maxiter and
+%      convcrit values for each specific coarsestep, by matching the
+%      lengths of either one of both to the length of the coarsesteps list,
+%      e.g., maxiter = [5 5 10].
+%
+%    - interpmeth = 'spline','linear','cubic','nearest'
+%      Interpolation method, set to linear to reduce memory usage, spline
+%      is twice as slow but a bit more accurate compared to cubic, which is
+%      a lot more accurate than linear.
+%
+%    - normalized = true,false
+%      This normalizes the domain of the polynomial basis-functions, i.e.,
+%      it assumes -1 <= x,y <= 1. This improves the machine precision and
+%      as a resultt, resolves singularity issues for high number of DOF and
+%      high order polynomials. However, it makes the interpretation of the
+%      DOF values less trivial.
+%
+%    - basis = 'polynomial','chebyshev'
+%      polynomial: phi(k) = [a b d] = x^a * y^b * e_d
+%      chebyshev:  phi(k) = [a b d] = Ta(x) * Tb(y) * e_d
+%                  for both above bases, an individual row of phi has to be
+%                  supplied for each desired DOF per direction. If nothing is
+%                  given polynomials are used.
+%
+%    - gradg = 'G1'; 'G2'; "G3"; "G4"; "G5"; "G6"; "G7"
+%      Enables the use of the gradient of g for M (and m) and b. i.e. gradf
+%      = 0.5*(gradf + gradg). This is (much) slower, but should be slightly
+%      more robust.
+%
+%    - verbose = 2,1,0
+%      Sets the level of output the the command window, where level 2 gives
+%      the most rich output, and level 0 results in silent operation.
+%
+%    - logfile = false,'somefile.log'
+%      Log the correlation progress in a logfile, if the file exists the
+%      new log data will be appended.
+%
+%    - comment = false,'some string'
+%      A comment for in the logfile header, use a cell array for multi line
+%      comments.
+%
+%    - debug = false,true
+%      Creates DbugXX structures in main worspace for each coarse graining
+%      step containing all usefull variables for that step. Option can become
+%      memory heavy since all images are stored
+%
+%    - fulloutput = false,true
+%      Setting this to true will lead to a more full output (gdic) structre
+%
+%    - strain = 'small','membrane','none','logarithmic','greenlagrange',
+%               'euler-almansi'
+%      Specify which strain option to use to obtain the incremental strain
+%
+%    - mc =0,n
+%      Specify at which coarse grain step to use the matrix mc. For the 
+%      explanation of mc the recurring motion IDIC theory can be looked at.
+
+
+
