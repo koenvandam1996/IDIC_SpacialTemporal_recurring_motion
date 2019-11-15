@@ -1,5 +1,5 @@
 function gdic = IDIC_Calculation(x,y,u,phi,Manifold,options)
-currentversion = 'version 1(with working Mask and Manifold)';
+currentversion = 'version 1(with working Mask and Manifold to obtain one average field)';
 tic % start a cpu time counter
 NoI  = length(Manifold(1,1,:))-1;
 
@@ -17,13 +17,7 @@ if options.background>0
         background=background+Manifold(:,:,i);
     end
     background=background/length(Manifold(1,1,:));
-    background=imgaussfilt(background,2);
-%     meanbackground=background;
-%     meanbackground(options.mask)=NaN;
-%     meanbackground=nanmean(nanmean(meanbackground));
-%     background=floor((background-meanbackground)*options.background);
-%     background(isnan(background))=0;
-    %background(background<0)=0;
+    background=imgaussfilt(background,options.background);
     for i=1:length(Manifold(1,1,:))
         l=Manifold(:,:,i)-background;
         scaled = l- min(min(l));  
@@ -95,9 +89,7 @@ for kc = 1:Ncoarse
             % output to log file
             fprintf(fid,'crs:%d/%d, sps:%2d ==================== \n',kc,Ncoarse,sps);
         end
-        
         crs = coarsegrainfun(x,y,coarsesteps(kc),options,Manifold);
-        
 
         % ============================
         % Allocate Memory
@@ -111,7 +103,7 @@ for kc = 1:Ncoarse
         % ============================
         % update h for initial guess average displacement field
         % ============================
-        % loop over the shapefunctions                
+        % loop over the shapefunctions and store the basis function fields              
         Phii=zeros([crs.Npx Ndof],options.datatype);
         for kdof = 1:Ndof
             % call the matlab function which creates the basis for this DOF
@@ -170,7 +162,7 @@ for kc = 1:Ncoarse
             M  = zeros((Ndof+NoI-1),(Ndof+NoI-1),options.datatype);
             b  = zeros((Ndof+NoI-1),1,options.datatype);
             Mc=0;
-            % construct the average residual
+            % calculate M and b by looping over the image pairs
             for i=1:NoI
                 r       =  crs.Manf(:,:,i) - crs.Manh(:,:,i);
                 % update m and M
@@ -183,6 +175,7 @@ for kc = 1:Ncoarse
             % solve for change in degrees of freedom
             du = (M+Mc)\b;
             u  = u + du(1:Ndof);
+            % store new factors with first factor fixed at 1
             for i=2:NoI
                 factor(i)=factor(i)+(du(Ndof+i-1));
             end
@@ -271,7 +264,6 @@ for kc = 1:Ncoarse
                 clear residual
                 assignin('base','crs',crs)
             end
-            
             
             % test if maximum iterations is reached
             if it >= maxiter

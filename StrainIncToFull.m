@@ -1,4 +1,4 @@
-load('C:\Users\s149743\Documents\globalDIC - v1.0.rc - Release Candidate\15-15backgr.mat')
+load('C:\Users\s149743\Documents\globalDIC - v1.0.rc - Release Candidate\plot\15-15backgr.mat')
 [n, m] = size(Ux);
 dx = mean(diff(x));
 dy = mean(diff(y));
@@ -10,6 +10,7 @@ Ux((gdic.mask(1:end-edgetop)+edgetop))=NaN;
 Uy((gdic.mask(1:end-edgetop)+edgetop))=NaN;
 Ux((gdic.mask(edgebot+1:end)-edgebot))=NaN;
 Uy((gdic.mask(edgebot+1:end)-edgebot))=NaN;
+
 [F.xx, F.xy] = gradient(Ux,dx,dy);
 [F.yx, F.yy] = gradient(Uy,dx,dy);
 ZERO = zeros(n,m,'int8');
@@ -24,7 +25,7 @@ F.xytot=zeros(n,m);
 F.yxtot=zeros(n,m);
 F.yytot=zeros(n,m);
 for i=1:n
-    for j=1:400
+    for j=1:800
         ifirst=i;
         jfirst=j;
         displx=Ux(round(ifirst),round(jfirst));
@@ -51,15 +52,15 @@ for i=1:n
             isec=ifirst+disply;
             jsec=jfirst+displx;
             if F.xxtot(round(isec),round(jsec))==0
-            F.xxtot(round(isec),round(jsec))=F.xxtot(round(ifirst),round(jfirst))*F.xx(round(isec),round(jsec))+F.xytot(round(ifirst),round(jfirst))*F.yx(round(isec),round(jsec));
-            F.xytot(round(isec),round(jsec))=F.xxtot(round(ifirst),round(jfirst))*F.xy(round(isec),round(jsec))+F.xytot(round(ifirst),round(jfirst))*F.yy(round(isec),round(jsec));
-            F.yxtot(round(isec),round(jsec))=F.yxtot(round(ifirst),round(jfirst))*F.xx(round(isec),round(jsec))+F.yytot(round(ifirst),round(jfirst))*F.yx(round(isec),round(jsec));
-            F.yytot(round(isec),round(jsec))=F.yxtot(round(ifirst),round(jfirst))*F.xy(round(isec),round(jsec))+F.yytot(round(ifirst),round(jfirst))*F.yy(round(isec),round(jsec));
+            F.xxtot(round(isec),round(jsec))=F.xx(round(isec),round(jsec))*F.xxtot(round(ifirst),round(jfirst))+F.yx(round(isec),round(jsec))*F.xytot(round(ifirst),round(jfirst));
+            F.xytot(round(isec),round(jsec))=F.xx(round(isec),round(jsec))*F.xytot(round(ifirst),round(jfirst))+F.xy(round(isec),round(jsec))*F.yytot(round(ifirst),round(jfirst));
+            F.yxtot(round(isec),round(jsec))=F.yx(round(isec),round(jsec))*F.xxtot(round(ifirst),round(jfirst))+F.yy(round(isec),round(jsec))*F.yxtot(round(ifirst),round(jfirst));
+            F.yytot(round(isec),round(jsec))=F.yx(round(isec),round(jsec))*F.xxtot(round(ifirst),round(jfirst))+F.yy(round(isec),round(jsec))*F.yytot(round(ifirst),round(jfirst));
             else 
-                F.xxtot(round(isec),round(jsec))=(F.xxtot(round(isec),round(jsec))+(F.xxtot(round(ifirst),round(jfirst))*F.xx(round(isec),round(jsec))+F.xytot(round(ifirst),round(jfirst))*F.yx(round(isec),round(jsec))))/2;
-                F.xytot(round(isec),round(jsec))=(F.xytot(round(isec),round(jsec))+(F.xxtot(round(ifirst),round(jfirst))*F.xy(round(isec),round(jsec))+F.xytot(round(ifirst),round(jfirst))*F.yy(round(isec),round(jsec))))/2;
-                F.yxtot(round(isec),round(jsec))=(F.yxtot(round(isec),round(jsec))+(F.yxtot(round(ifirst),round(jfirst))*F.xx(round(isec),round(jsec))+F.yytot(round(ifirst),round(jfirst))*F.yx(round(isec),round(jsec))))/2;
-                F.yytot(round(isec),round(jsec))=(F.yytot(round(isec),round(jsec))+(F.yxtot(round(ifirst),round(jfirst))*F.xy(round(isec),round(jsec))+F.yytot(round(ifirst),round(jfirst))*F.yy(round(isec),round(jsec))))/2;
+                F.xxtot(round(isec),round(jsec))=(F.xxtot(round(isec),round(jsec))+(F.xx(round(isec),round(jsec))*F.xxtot(round(ifirst),round(jfirst))+F.yx(round(isec),round(jsec))*F.xytot(round(ifirst),round(jfirst))))/2;
+                F.xytot(round(isec),round(jsec))=(F.xytot(round(isec),round(jsec))+(F.xx(round(isec),round(jsec))*F.xytot(round(ifirst),round(jfirst))+F.xy(round(isec),round(jsec))*F.yytot(round(ifirst),round(jfirst))))/2;
+                F.yxtot(round(isec),round(jsec))=(F.yxtot(round(isec),round(jsec))+(F.yx(round(isec),round(jsec))*F.xxtot(round(ifirst),round(jfirst))+F.yy(round(isec),round(jsec))*F.yxtot(round(ifirst),round(jfirst))))/2;
+                F.yytot(round(isec),round(jsec))=(F.yytot(round(isec),round(jsec))+(F.yx(round(isec),round(jsec))*F.xxtot(round(ifirst),round(jfirst))+F.yy(round(isec),round(jsec))*F.yytot(round(ifirst),round(jfirst))))/2;
             end
             ifirst=isec;
             jfirst=jsec;
